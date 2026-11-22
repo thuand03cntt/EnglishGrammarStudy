@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}500 - Lỗi máy chủ{% endblock %}
+
+{% block content %}
+<div class="container text-center py-5">
+    <div class="py-5">
+        <i class="bi bi-gear-wide-connected text-warning display-1 mb-3"></i>
+        <h1 class="display-5 fw-bold">500 - Đã xảy ra lỗi máy chủ</h1>
+        <p class="lead text-secondary mb-4">Hệ thống đang gặp sự cố gián đoạn tạm thời. Vui lòng thử lại sau.</p>
+        <a href="{{ url_for('exam.index') }}" class="btn btn-primary px-4 py-2">
+            <i class="bi bi-house-door me-2"></i> Quay về Trang chủ
+        </a>
+    </div>
+</div>
+{% endblock %}

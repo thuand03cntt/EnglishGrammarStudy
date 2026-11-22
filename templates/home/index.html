@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Trang chủ - Luyện thi Ngữ pháp Tiếng Anh{% endblock %}
+
+{% block content %}
+<!-- Hero Banner -->
+<div class="hero-section mb-5 text-center text-md-start">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <span class="badge bg-light text-primary px-3 py-2 rounded-pill fw-bold mb-3 shadow-sm">
+                    <i class="bi bi-stars me-1"></i> Thuật Toán Luyện Tập Thông Minh
+                </span>
+                <h1 class="display-4 fw-bold mb-3">Chinh Phục Ngữ Pháp Tiếng Anh</h1>
+                <p class="lead mb-4 text-light opacity-90">
+                    Hệ thống tự động đề xuất câu hỏi phù hợp với trình độ, ưu tiên ôn tập các câu sai và chống lặp câu hỏi thông minh. Hỗ trợ TOEIC, TOEFL, và các chứng chỉ chuẩn quốc gia.
+                </p>
+                <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-md-start">
+                    <a href="{{ url_for('exam.setup') }}" class="btn btn-warning btn-lg fw-bold px-4 py-3 text-dark shadow">
+                        <i class="bi bi-play-circle-fill me-2"></i> Bắt đầu Luyện thi ngay
+                    </a>
+                    {% if not current_user.is_authenticated %}
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light btn-lg px-4 py-3">
+                            <i class="bi bi-person-plus me-2"></i> Tạo tài khoản miễn phí
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block text-center">
+                <i class="bi bi-trophy text-warning" style="font-size: 11rem; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Stat Counter Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card stat-card p-3 shadow-sm h-100">
+                <div class="d-flex align-items-center">
+                    <div class="p-3 bg-primary-subtle rounded-3 text-primary me-3">
+                        <i class="bi bi-journal-check fs-2"></i>
+                    </div>
+                    <div>
+                        <div class="fs-3 fw-bold">{{ total_questions }}</div>
+                        <div class="text-secondary small">Câu hỏi trong kho dữ liệu</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card p-3 shadow-sm h-100" style="border-left-color: #10b981;">
+                <div class="d-flex align-items-center">
+                    <div class="p-3 bg-success-subtle rounded-3 text-success me-3">
+                        <i class="bi bi-award fs-2"></i>
+                    </div>
+                    <div>
+                        <div class="fs-3 fw-bold">{{ total_exams_taken }}</div>
+                        <div class="text-secondary small">Lượt thi đã hoàn thành</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card p-3 shadow-sm h-100" style="border-left-color: #f59e0b;">
+                <div class="d-flex align-items-center">
+                    <div class="p-3 bg-warning-subtle rounded-3 text-warning me-3">
+                        <i class="bi bi-people fs-2"></i>
+                    </div>
+                    <div>
+                        <div class="fs-3 fw-bold">{{ total_users }}</div>
+                        <div class="text-secondary small">Thí sinh đang luyện tập</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard Section -->
+    <div class="card shadow-sm border-0 mb-5" id="leaderboard">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <h4 class="mb-0 fw-bold text-dark d-flex align-items-center">
+                <i class="bi bi-trophy-fill text-warning me-2"></i> Bảng Xếp Hạng Thí Sinh Xuất Sắc
+            </h4>
+            <span class="badge bg-secondary-subtle text-secondary px-3 py-2">
+                <i class="bi bi-clock me-1"></i> Xếp hạng theo Tổng số câu đúng cộng dồn
+            </span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center" style="width: 80px;">Hạng</th>
+                            <th>Thí sinh</th>
+                            <th>Trình độ (Level)</th>
+                            <th class="text-center">Số lượt thi</th>
+                            <th class="text-end pe-4">Tổng câu đúng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if leaderboard %}
+                            {% for user in leaderboard %}
+                                <tr {% if current_user.is_authenticated and current_user.id == user.id %}class="table-primary fw-semibold"{% endif %}>
+                                    <td class="text-center">
+                                        {% if loop.index == 1 %}
+                                            <span class="rank-badge rank-1"><i class="bi bi-trophy-fill"></i></span>
+                                        {% elif loop.index == 2 %}
+                                            <span class="rank-badge rank-2">2</span>
+                                        {% elif loop.index == 3 %}
+                                            <span class="rank-badge rank-3">3</span>
+                                        {% else %}
+                                            <span class="fw-bold text-secondary">{{ loop.index }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ url_for('static', filename='uploads/avatars/' + user.avatar) }}" 
+                                                 alt="{{ user.username }}" 
+                                                 class="nav-avatar me-3"
+                                                 onerror="this.src='{{ url_for('static', filename='img/default_avatar.png') }}';">
+                                            <div>
+                                                <div class="fw-bold">{{ user.username }}</div>
+                                                {% if current_user.is_authenticated and current_user.id == user.id %}
+                                                    <span class="badge bg-primary text-white" style="font-size: 0.7rem;">Bạn</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1">
+                                            {{ user.level_name or 'Chưa phân hạng' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark border">{{ user.total_attempts }} lượt</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <span class="fs-5 fw-bold text-success">{{ user.total_correct }}</span>
+                                        <span class="text-secondary small"> câu</span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                    Chưa có dữ liệu lượt thi nào hoàn thành. Hãy là người đầu tiên làm bài thi!
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

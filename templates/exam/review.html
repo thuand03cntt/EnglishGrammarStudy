@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Xem lại bài thi #{{ attempt.id }} - EnglishPractice{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Summary Bar -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <a href="{{ url_for('exam.history') }}" class="btn btn-sm btn-outline-secondary mb-2">
+                    <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách lịch sử
+                </a>
+                <h4 class="fw-bold mb-1">
+                    Xem Lại Bài Thi #{{ attempt.id }} (Lần thi thứ {{ attempt.attempt_number }})
+                </h4>
+                <p class="text-secondary small mb-0">
+                    Chủ đề: <strong>{{ attempt.category.full_name if attempt.category else 'Tổng hợp mọi chủ đề' }}</strong> &bull; 
+                    Nộp bài lúc: {{ attempt.completed_at|format_datetime }}
+                </p>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-end">
+                    <div class="fs-3 fw-bold text-primary">{{ attempt.score }}đ</div>
+                    <div class="small text-secondary">
+                        Đúng {{ attempt.correct_count }}/{{ attempt.total_questions }} &bull; 
+                        Thời gian: {{ attempt.formatted_duration }}
+                    </div>
+                </div>
+                <a href="{{ url_for('exam.setup') }}" class="btn btn-primary fw-semibold">
+                    <i class="bi bi-play-circle me-1"></i> Luyện đề mới
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions Detailed List -->
+    {% for detail in details %}
+        <div class="question-card shadow-sm mb-4 border {% if detail.is_correct %}border-success{% else %}border-danger{% endif %}">
+            <div class="question-header d-flex justify-content-between align-items-center {% if detail.is_correct %}bg-success-subtle text-success-emphasis{% else %}bg-danger-subtle text-danger-emphasis{% endif %}">
+                <div>
+                    <span class="fw-bold me-2">Câu {{ loop.index }}:</span>
+                    {% if detail.is_correct %}
+                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Đúng</span>
+                    {% else %}
+                        <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> Sai</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <span class="badge bg-light text-dark border">{{ detail.question.level.name }}</span>
+                </div>
+            </div>
+
+            <div class="question-body">
+                <!-- Question Content -->
+                <div class="fs-5 mb-3">{{ detail.question.content|safe }}</div>
+
+                <!-- 4 Options -->
+                <div class="options-review mb-3">
+                    {% for opt_num in [1, 2, 3, 4] %}
+                        {% set opt_text = detail.question.get_option_text(opt_num) %}
+                        {% set is_this_correct = (opt_num == detail.question.correct_option) %}
+                        {% set is_this_selected = (opt_num == detail.selected_option) %}
+                        
+                        <div class="p-2 px-3 rounded mb-2 border d-flex align-items-center justify-content-between
+                            {% if is_this_correct %}
+                                option-correct
+                            {% elif is_this_selected and not is_this_correct %}
+                                option-wrong
+                            {% else %}
+                                bg-light text-muted
+                            {% endif %}">
+                            
+                            <div>
+                                <span class="fw-bold me-2">
+                                    {% if opt_num == 1 %}A.{% elif opt_num == 2 %}B.{% elif opt_num == 3 %}C.{% else %}D.{% endif %}
+                                </span>
+                                {{ opt_text }}
+                            </div>
+
+                            <div>
+                                {% if is_this_correct and is_this_selected %}
+                                    <span class="badge bg-success"><i class="bi bi-check-lg me-1"></i> Đáp án của bạn (Đúng)</span>
+                                {% elif is_this_correct %}
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Đáp án chính xác</span>
+                                {% elif is_this_selected %}
+                                    <span class="badge bg-danger"><i class="bi bi-x-lg me-1"></i> Bạn đã chọn đáp án này</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Theory Explanation -->
+                {% if detail.question.explanation %}
+                    <div class="explanation-card">
+                        <div class="fw-bold text-success-emphasis mb-1">
+                            <i class="bi bi-lightbulb-fill text-warning me-1"></i> Giải thích ngữ pháp & dịch nghĩa:
+                        </div>
+                        <div class="small text-secondary mb-0">
+                            {{ detail.question.explanation|safe }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

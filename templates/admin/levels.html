@@ -1,0 +1,128 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Quản lý Level - EnglishPractice{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold mb-1">Quản Lý Danh Mục Level</h2>
+        <p class="text-secondary small mb-0">Cấu hình cấp độ khó của người học và câu hỏi (Rank 1 đến 5)</p>
+    </div>
+    <button type="button" class="btn btn-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#addLevelModal">
+        <i class="bi bi-plus-lg me-1"></i> Thêm Level mới
+    </button>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center" style="width: 70px;">ID</th>
+                        <th>Tên Level</th>
+                        <th class="text-center">Độ khó (Rank Order)</th>
+                        <th>Mô tả chi tiết</th>
+                        <th class="text-center">Số câu hỏi</th>
+                        <th class="text-end pe-4" style="width: 160px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lvl in levels %}
+                        <tr>
+                            <td class="text-center fw-bold text-secondary">{{ lvl.id }}</td>
+                            <td>
+                                <span class="badge bg-primary fs-6 px-3 py-2">{{ lvl.name }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-warning text-dark px-3 py-2 fw-bold">Rank {{ lvl.rank_order }}</span>
+                            </td>
+                            <td class="text-secondary small">{{ lvl.description or '—' }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border">{{ lvl.questions|length }} câu</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <button type="button" class="btn btn-sm btn-outline-secondary me-1" 
+                                        data-bs-toggle="modal" data-bs-target="#editLevelModal{{ lvl.id }}">
+                                    <i class="bi bi-pencil"></i> Sửa
+                                </button>
+                                <form action="{{ url_for('admin.delete_level', level_id=lvl.id) }}" method="POST" class="d-inline"
+                                      onsubmit="return confirm('Bạn có chắc chắn muốn xóa Level này?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" {% if lvl.questions|length > 0 %}disabled title="Không thể xóa khi còn câu hỏi"{% endif %}>
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+
+                        <!-- Edit Level Modal -->
+                        <div class="modal fade" id="editLevelModal{{ lvl.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form action="{{ url_for('admin.edit_level', level_id=lvl.id) }}" method="POST">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title fw-bold">Chỉnh Sửa Level #{{ lvl.id }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold">Tên Level</label>
+                                                <input type="text" class="form-control" name="name" value="{{ lvl.name }}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold">Độ khó (Rank Order: 1-5)</label>
+                                                <input type="number" class="form-control" name="rank_order" value="{{ lvl.rank_order }}" min="1" max="10" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold">Mô tả</label>
+                                                <textarea class="form-control" name="description" rows="2">{{ lvl.description or '' }}</textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                                            <button type="submit" class="btn btn-primary fw-semibold">Lưu thay đổi</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Level Modal -->
+<div class="modal fade" id="addLevelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('admin.levels') }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Thêm Level Mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Tên Level <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="name" placeholder="VD: Upper-Intermediate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Độ khó (Rank Order) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" name="rank_order" placeholder="VD: 6" min="1" max="20" required>
+                        <div class="form-text small">Độ khó tăng dần, dùng để đối chiếu câu hỏi thông minh.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mô tả</label>
+                        <textarea class="form-control" name="description" rows="2" placeholder="Mô tả tiêu chuẩn của trình độ này..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary fw-semibold">Tạo Level</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

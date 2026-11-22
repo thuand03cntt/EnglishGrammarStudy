@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Lịch sử làm bài thi - EnglishPractice{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1 d-flex align-items-center">
+                <i class="bi bi-clock-history text-primary me-2"></i> Lịch Sử Các Lượt Thi Của Bạn
+            </h3>
+            <p class="text-secondary small mb-0">Theo dõi sự tiến bộ ngữ pháp qua từng bài thi</p>
+        </div>
+        <a href="{{ url_for('exam.setup') }}" class="btn btn-primary fw-semibold">
+            <i class="bi bi-plus-circle me-1"></i> Làm bài thi mới
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center" style="width: 80px;">Lần thi</th>
+                            <th>Chủ đề luyện tập</th>
+                            <th>Thời gian nộp bài</th>
+                            <th class="text-center">Số câu đúng / Tổng</th>
+                            <th class="text-center">Thời gian làm</th>
+                            <th class="text-center">Điểm số</th>
+                            <th class="text-end pe-4">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if pagination.items %}
+                            {% for attempt in pagination.items %}
+                                <tr>
+                                    <td class="text-center fw-bold text-secondary">#{{ attempt.attempt_number }}</td>
+                                    <td>
+                                        <div class="fw-semibold">
+                                            {{ attempt.category.full_name if attempt.category else 'Tổng hợp mọi chủ đề' }}
+                                        </div>
+                                    </td>
+                                    <td class="text-secondary small">
+                                        {{ attempt.completed_at|format_datetime }}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                            {{ attempt.correct_count }} / {{ attempt.total_questions }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center text-secondary small">
+                                        <i class="bi bi-stopwatch me-1"></i> {{ attempt.formatted_duration }}
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge {{ attempt.score|score_badge }} px-3 py-2 fs-6">
+                                            {{ attempt.score }}đ
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <a href="{{ url_for('exam.review', attempt_id=attempt.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye me-1"></i> Xem chi tiết
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <i class="bi bi-journal-x fs-1 d-block mb-2 text-secondary"></i>
+                                    Bạn chưa có bài thi nào hoàn thành. Hãy bắt đầu luyện tập ngay hôm nay!
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination Controls -->
+        {% if pagination.pages > 1 %}
+            <div class="card-footer bg-white border-top py-3 d-flex justify-content-between align-items-center">
+                <span class="small text-muted">Hiển thị trang {{ pagination.page }} / {{ pagination.pages }}</span>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('exam.history', page=pagination.prev_num) }}">Trang trước</a>
+                        </li>
+                        {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                            {% if p %}
+                                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('exam.history', page=p) }}">{{ p }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                            {% endif %}
+                        {% endfor %}
+                        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('exam.history', page=pagination.next_num) }}">Trang sau</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

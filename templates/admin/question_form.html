@@ -1,0 +1,210 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}{% if question %}Sửa câu hỏi #{{ question.id }}{% else %}Soạn câu hỏi mới{% endif %} - EnglishPractice{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold mb-1">
+            {% if question %}
+                <i class="bi bi-pencil-square text-primary me-2"></i> Chỉnh Sửa Câu Hỏi #{{ question.id }}
+            {% else %}
+                <i class="bi bi-plus-circle text-primary me-2"></i> Soạn Thảo Câu Hỏi Mới
+            {% endif %}
+        </h2>
+        <p class="text-secondary small mb-0">Hỗ trợ định dạng Rich Text (in đậm, nghiêng, màu sắc, gạch chân...)</p>
+    </div>
+    <a href="{{ url_for('admin.questions') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách câu hỏi
+    </a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        <form id="questionForm" method="POST" 
+              action="{% if question %}{{ url_for('admin.edit_question', question_id=question.id) }}{% else %}{{ url_for('admin.create_question') }}{% endif %}">
+            
+            <!-- Hidden inputs to hold Quill HTML contents -->
+            <input type="hidden" name="content" id="content_input">
+            <input type="hidden" name="explanation" id="explanation_input">
+
+            <!-- 1. Question Content (Rich Text) -->
+            <div class="mb-4">
+                <label class="form-label fw-bold fs-6">
+                    1. Nội dung câu hỏi (Rich Text) <span class="text-danger">*</span>
+                </label>
+                <div id="editor-content" class="bg-white">
+                    {% if question %}{{ question.content|safe }}{% endif %}
+                </div>
+                <div class="form-text small">
+                    Bạn có thể bôi đậm chỗ trống <code>______</code> hoặc từ khóa ngữ pháp bằng thanh công cụ phía trên.
+                </div>
+            </div>
+
+            <!-- 2. Four Choices and Correct Answer Selector -->
+            <div class="mb-4">
+                <label class="form-label fw-bold fs-6">
+                    2. Bốn lựa chọn trả lời và chọn Đáp án đúng <span class="text-danger">*</span>
+                </label>
+                <div class="row g-3">
+                    <!-- Option 1 -->
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <input class="form-check-input mt-0 me-2" type="radio" name="correct_option" value="1" 
+                                       {% if (question and question.correct_option == 1) or not question %}checked{% endif %} required>
+                                <strong>A</strong>
+                            </span>
+                            <input type="text" class="form-control" name="option_1" placeholder="Nội dung lựa chọn A" 
+                                   value="{{ question.option_1 if question else '' }}" required>
+                        </div>
+                    </div>
+
+                    <!-- Option 2 -->
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <input class="form-check-input mt-0 me-2" type="radio" name="correct_option" value="2" 
+                                       {% if question and question.correct_option == 2 %}checked{% endif %} required>
+                                <strong>B</strong>
+                            </span>
+                            <input type="text" class="form-control" name="option_2" placeholder="Nội dung lựa chọn B" 
+                                   value="{{ question.option_2 if question else '' }}" required>
+                        </div>
+                    </div>
+
+                    <!-- Option 3 -->
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <input class="form-check-input mt-0 me-2" type="radio" name="correct_option" value="3" 
+                                       {% if question and question.correct_option == 3 %}checked{% endif %} required>
+                                <strong>C</strong>
+                            </span>
+                            <input type="text" class="form-control" name="option_3" placeholder="Nội dung lựa chọn C" 
+                                   value="{{ question.option_3 if question else '' }}" required>
+                        </div>
+                    </div>
+
+                    <!-- Option 4 -->
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <input class="form-check-input mt-0 me-2" type="radio" name="correct_option" value="4" 
+                                       {% if question and question.correct_option == 4 %}checked{% endif %} required>
+                                <strong>D</strong>
+                            </span>
+                            <input type="text" class="form-control" name="option_4" placeholder="Nội dung lựa chọn D" 
+                                   value="{{ question.option_4 if question else '' }}" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-text small text-primary mt-2">
+                    <i class="bi bi-check-circle-fill me-1"></i> Tích chọn nút tròn radio tương ứng với đáp án chính xác của câu hỏi.
+                </div>
+            </div>
+
+            <!-- 3. Question Metadata (Level & Category) -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label for="level_id" class="form-label fw-bold">
+                        3. Level Độ khó <span class="text-danger">*</span>
+                    </label>
+                    <select class="form-select" id="level_id" name="level_id" required>
+                        <option value="">-- Chọn Level --</option>
+                        {% for lvl in levels %}
+                            <option value="{{ lvl.id }}" {% if question and question.level_id == lvl.id %}selected{% endif %}>
+                                {{ lvl.name }} (Rank: {{ lvl.rank_order }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="category_id" class="form-label fw-bold">
+                        4. Gán Chủ đề luyện tập (Tùy chọn)
+                    </label>
+                    <select class="form-select" id="category_id" name="category_id">
+                        <option value="">-- Dùng chung cho tất cả các chủ đề (NULL) --</option>
+                        {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if question and question.category_id == cat.id %}selected{% endif %}>
+                                {{ cat.full_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text small">
+                        <strong>Quy tắc đặc biệt:</strong> Nếu không chọn chủ đề nào, câu hỏi sẽ được dùng chung cho tất cả các chủ đề luyện thi.
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Explanation (Rich Text) -->
+            <div class="mb-4">
+                <label class="form-label fw-bold fs-6">
+                    5. Giải thích chi tiết câu hỏi (Rich Text)
+                </label>
+                <div id="editor-explanation" class="bg-white">
+                    {% if question and question.explanation %}{{ question.explanation|safe }}{% endif %}
+                </div>
+                <div class="form-text small">
+                    Giải thích ngữ pháp, dịch nghĩa câu văn, chỉ ra điểm mấu chốt để người học hiểu rõ bản chất câu hỏi.
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                <a href="{{ url_for('admin.questions') }}" class="btn btn-secondary px-4">Hủy bỏ</a>
+                <button type="submit" class="btn btn-primary px-4 fw-bold">
+                    <i class="bi bi-save me-1"></i> {% if question %}Lưu Cập Nhật{% else %}Tạo Câu Hỏi{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block admin_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const toolbarOptions = [
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        ['clean']
+    ];
+
+    // Initialize Quill for Question Content
+    const quillContent = new Quill('#editor-content', {
+        theme: 'snow',
+        placeholder: 'Nhập nội dung câu hỏi...',
+        modules: { toolbar: toolbarOptions }
+    });
+
+    // Initialize Quill for Explanation
+    const quillExplanation = new Quill('#editor-explanation', {
+        theme: 'snow',
+        placeholder: 'Nhập giải thích ngữ pháp chi tiết (dịch nghĩa, cấu trúc, tại sao đúng/sai)...',
+        modules: { toolbar: toolbarOptions }
+    });
+
+    // Sync Quill contents to hidden inputs before form submission
+    const form = document.getElementById('questionForm');
+    form.addEventListener('submit', function (e) {
+        const contentInput = document.getElementById('content_input');
+        const explanationInput = document.getElementById('explanation_input');
+
+        // Check if content is empty (Quill empty state is '<p><br></p>')
+        const contentHtml = quillContent.root.innerHTML.trim();
+        const contentText = quillContent.getText().trim();
+        if (!contentText) {
+            alert('Vui lòng nhập nội dung câu hỏi.');
+            e.preventDefault();
+            return false;
+        }
+
+        contentInput.value = contentHtml;
+        explanationInput.value = quillExplanation.root.innerHTML.trim();
+    });
+});
+</script>
+{% endblock %}

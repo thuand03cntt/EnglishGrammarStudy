@@ -1,0 +1,92 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Import Câu hỏi từ Excel - EnglishPractice{% endblock %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold mb-1">Import Câu Hỏi Hàng Loạt Từ Excel</h2>
+        <p class="text-secondary small mb-0">Tải file template chuẩn, điền dữ liệu và tải lên để import vào cơ sở dữ liệu</p>
+    </div>
+    <a href="{{ url_for('admin.download_template') }}" class="btn btn-outline-success fw-bold">
+        <i class="bi bi-download me-1"></i> Tải File Template Mẫu (.xlsx)
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Step 1: Download & Instructions -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="mb-0 fw-bold text-dark">
+                    <i class="bi bi-info-circle-fill text-primary me-2"></i> Hướng Dẫn Chuẩn Bị File Excel
+                </h5>
+            </div>
+            <div class="card-body">
+                <ol class="ps-3 mb-4 text-secondary small" style="line-height: 1.8;">
+                    <li>Bấm nút <strong>"Tải File Template Mẫu (.xlsx)"</strong> ở góc trên bên phải.</li>
+                    <li>Mở file bằng Microsoft Excel, Google Sheets hoặc LibreOffice.</li>
+                    <li>Giữ nguyên dòng tiêu đề (Dòng 1) gồm 9 cột chuẩn:
+                        <ul class="my-1">
+                            <li><code>Cau_hoi</code>: Nội dung câu hỏi (bắt buộc)</li>
+                            <li><code>Lua_chon_1</code> đến <code>4</code>: 4 phương án trả lời</li>
+                            <li><code>Dap_an_dung (1-4)</code>: Số nguyên 1, 2, 3 hoặc 4</li>
+                            <li><code>Giai_thich</code>: Lời giải thích ngữ pháp</li>
+                            <li><code>Level</code>: Tên level (VD: Beginner, Elementary, Pre-intermediate, Intermediate, Advance) hoặc Rank order</li>
+                            <li><code>Chu_de_id (tùy chọn)</code>: ID của chủ đề trong hệ thống (hoặc để trống nếu là câu hỏi dùng chung)</li>
+                        </ul>
+                    </li>
+                    <li>Lưu file dưới định dạng <code>.xlsx</code> và upload ở khung bên phải.</li>
+                </ol>
+
+                <div class="d-grid">
+                    <a href="{{ url_for('admin.download_template') }}" class="btn btn-success py-2 fw-semibold">
+                        <i class="bi bi-file-earmark-arrow-down me-1"></i> Tải Ngay File Template .XLSX
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Upload & Validation Results -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-bottom py-3">
+                <h5 class="mb-0 fw-bold text-dark">
+                    <i class="bi bi-upload text-success me-2"></i> Tải Lên File Excel (.xlsx)
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('admin.import_excel') }}" enctype="multipart/form-data">
+                    <div class="mb-4">
+                        <label for="excel_file" class="form-label fw-bold">Chọn file dữ liệu câu hỏi (.xlsx)</label>
+                        <input class="form-control form-control-lg" type="file" id="excel_file" name="excel_file" accept=".xlsx,.xlsm" required>
+                        <div class="form-text small">Chỉ chấp nhận định dạng Excel OpenXML (.xlsx). Dung lượng tối đa 5MB.</div>
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                            <i class="bi bi-cloud-arrow-up-fill me-2"></i> Kiểm Tra & Tiến Hành Import
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Detailed Errors List if any -->
+                {% if errors %}
+                    <div class="alert alert-danger mt-4 border-danger-subtle">
+                        <h6 class="fw-bold mb-2">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Phát hiện {{ errors|length }} lỗi trong file Excel:
+                        </h6>
+                        <p class="small mb-2">Để bảo đảm tính toàn vẹn dữ liệu, toàn bộ quá trình import đã được dừng lại. Vui lòng sửa các dòng dưới đây và upload lại:</p>
+                        <ul class="mb-0 small ps-3" style="max-height: 250px; overflow-y: auto;">
+                            {% for err in errors %}
+                                <li>{{ err }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

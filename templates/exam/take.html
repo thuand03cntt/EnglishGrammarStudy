@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Đang làm bài thi #{{ attempt.id }} - EnglishPractice{% endblock %}
+
+{% block content %}
+<!-- Sticky Timer Bar -->
+<div class="sticky-timer-bar py-2 mb-4">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge bg-primary me-2">Đề thi #{{ attempt.id }}</span>
+            <span class="fw-semibold text-secondary d-none d-md-inline">
+                {{ attempt.category.full_name if attempt.category else 'Tổng hợp mọi chủ đề' }}
+            </span>
+        </div>
+        <div class="d-flex align-items-center">
+            <span class="text-secondary small me-2 d-none d-sm-inline">Thời gian làm bài:</span>
+            <div class="timer-box" id="timerDisplay">00:00</div>
+        </div>
+        <div>
+            <button type="button" class="btn btn-danger btn-sm fw-bold px-3" data-bs-toggle="modal" data-bs-target="#submitConfirmModal">
+                <i class="bi bi-send-check me-1"></i> Nộp Bài
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row g-4">
+        <!-- Main Questions Area (Left Column) -->
+        <div class="col-lg-8" id="examQuestionsArea">
+            <form id="examForm" method="POST" action="{{ url_for('exam.submit', attempt_id=attempt.id) }}"
+                  data-attempt-id="{{ attempt.id }}" data-total-questions="{{ details|length }}">
+                
+                <input type="hidden" name="duration_seconds" id="durationInput" value="0">
+
+                {% for detail in details %}
+                    <div class="question-card shadow-sm" id="question-card-{{ loop.index }}" data-order="{{ loop.index }}" style="display: none;">
+                        <div class="question-header">
+                            <div>
+                                <span class="badge bg-secondary me-2">Câu {{ loop.index }} / {{ details|length }}</span>
+                                <span class="badge bg-light text-dark border">{{ detail.question.level.name }}</span>
+                            </div>
+                            {% if detail.question.category %}
+                                <span class="small text-muted">{{ detail.question.category.name }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="question-body">
+                            <!-- Question HTML Content -->
+                            <div class="mb-4 question-content fs-5">
+                                {{ detail.question.content|safe }}
+                            </div>
+
+                            <!-- 4 Options (Radio Buttons) -->
+                            <div class="options-container">
+                                <label class="option-label" for="q_{{ detail.id }}_opt1">
+                                    <input type="radio" class="question-radio" 
+                                           id="q_{{ detail.id }}_opt1" 
+                                           name="q_{{ detail.id }}" 
+                                           value="1" 
+                                           {% if detail.selected_option == 1 %}checked{% endif %}>
+                                    <div><strong>A.</strong> {{ detail.question.option_1 }}</div>
+                                </label>
+
+                                <label class="option-label" for="q_{{ detail.id }}_opt2">
+                                    <input type="radio" class="question-radio" 
+                                           id="q_{{ detail.id }}_opt2" 
+                                           name="q_{{ detail.id }}" 
+                                           value="2" 
+                                           {% if detail.selected_option == 2 %}checked{% endif %}>
+                                    <div><strong>B.</strong> {{ detail.question.option_2 }}</div>
+                                </label>
+
+                                <label class="option-label" for="q_{{ detail.id }}_opt3">
+                                    <input type="radio" class="question-radio" 
+                                           id="q_{{ detail.id }}_opt3" 
+                                           name="q_{{ detail.id }}" 
+                                           value="3" 
+                                           {% if detail.selected_option == 3 %}checked{% endif %}>
+                                    <div><strong>C.</strong> {{ detail.question.option_3 }}</div>
+                                </label>
+
+                                <label class="option-label" for="q_{{ detail.id }}_opt4">
+                                    <input type="radio" class="question-radio" 
+                                           id="q_{{ detail.id }}_opt4" 
+                                           name="q_{{ detail.id }}" 
+                                           value="4" 
+                                           {% if detail.selected_option == 4 %}checked{% endif %}>
+                                    <div><strong>D.</strong> {{ detail.question.option_4 }}</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <!-- Pagination Navigation Controls (10 questions / page) -->
+                <div class="card p-3 mb-4 shadow-sm border-0" id="paginationControls">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-primary" id="prevPageBtn">
+                            <i class="bi bi-chevron-left me-1"></i> Trang trước
+                        </button>
+                        
+                        <div class="fw-bold text-secondary" id="pageIndicator">
+                            Trang 1 / {{ ((details|length - 1) // 10) + 1 }}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            {% set total_pages = ((details|length - 1) // 10) + 1 %}
+                            {% for p in range(1, total_pages + 1) %}
+                                <button type="button" class="btn btn-sm btn-outline-secondary page-btn {% if p == 1 %}active{% endif %}" data-page="{{ p }}">
+                                    {{ p }}
+                                </button>
+                            {% endfor %}
+                        </div>
+
+                        <button type="button" class="btn btn-outline-primary" id="nextPageBtn">
+                            Trang tiếp theo <i class="bi bi-chevron-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Question Palette / Overview (Right Column) -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 sticky-top" style="top: 80px;">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-dark">
+                        <i class="bi bi-grid-3x3-gap-fill text-primary me-2"></i> Bảng điều hướng câu hỏi
+                    </h6>
+                    <span class="badge bg-primary" id="answeredCountBadge">0 / {{ details|length }}</span>
+                </div>
+                <div class="card-body">
+                    <p class="small text-secondary mb-3">
+                        Bấm vào số câu để chuyển đến câu hỏi đó. Câu đã chọn đáp án sẽ đổi màu xanh.
+                    </p>
+                    <div class="d-flex flex-wrap gap-1 mb-4 justify-content-start">
+                        {% for detail in details %}
+                            <button type="button" class="palette-btn" id="palette-btn-{{ loop.index }}" data-order="{{ loop.index }}">
+                                {{ loop.index }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="small d-flex justify-content-around text-secondary border-top pt-3">
+                        <div><span class="d-inline-block rounded-1 border me-1" style="width:14px;height:14px;background:#fff;"></span> Chưa làm</div>
+                        <div><span class="d-inline-block rounded-1 me-1" style="width:14px;height:14px;background:#2563eb;"></span> Đã làm</div>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="button" class="btn btn-danger btn-lg fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#submitConfirmModal">
+                            <i class="bi bi-check2-all me-2"></i> Kết Thúc & Nộp Bài
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Submit Confirmation Modal -->
+<div class="modal fade" id="submitConfirmModal" tabindex="-1" aria-labelledby="submitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="submitModalLabel">
+                    <i class="bi bi-question-circle text-warning me-2"></i> Xác Nhận Nộp Bài Thi
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4 text-center">
+                <p class="fs-5 mb-2">Bạn có chắc chắn muốn kết thúc bài thi và nộp bài?</p>
+                <div class="row g-2 justify-content-center my-3">
+                    <div class="col-5">
+                        <div class="p-3 bg-light rounded text-center">
+                            <div class="fs-4 fw-bold text-success" id="modalAnsweredCount">0</div>
+                            <div class="small text-muted">Câu đã chọn</div>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="p-3 bg-light rounded text-center">
+                            <div class="fs-4 fw-bold text-danger" id="modalUnansweredCount">{{ details|length }}</div>
+                            <div class="small text-muted">Câu chưa chọn</div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-secondary small mb-0">Hệ thống sẽ ngay lập tức chấm điểm và hiển thị đáp án kèm giải thích chi tiết.</p>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Làm tiếp</button>
+                <button type="button" class="btn btn-danger fw-bold px-4" id="confirmSubmitExamBtn">
+                    Đồng ý Nộp Bài
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/exam.js') }}"></script>
+{% endblock %}

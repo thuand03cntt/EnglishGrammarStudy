@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Đăng ký tài khoản - EnglishPractice{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-person-plus-fill text-primary" style="font-size: 3.5rem;"></i>
+                        <h3 class="fw-bold mt-2">Đăng Ký Tài Khoản Thí Sinh</h3>
+                        <p class="text-secondary small">Tạo tài khoản để lưu lại lịch sử làm bài và tham gia bảng xếp hạng</p>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('auth.register') }}" enctype="multipart/form-data">
+                        <!-- Avatar Preview & Upload -->
+                        <div class="text-center mb-4">
+                            <img id="avatarPreview" src="{{ url_for('static', filename='img/default_avatar.png') }}" 
+                                 alt="Avatar Preview" class="rounded-circle shadow-sm border border-2 border-primary mb-2" 
+                                 style="width: 84px; height: 84px; object-fit: cover;">
+                            <div>
+                                <label for="avatarInput" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-camera me-1"></i> Chọn ảnh đại diện (Tùy chọn)
+                                </label>
+                                <input type="file" id="avatarInput" name="avatar" class="d-none" accept="image/*">
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="username" class="form-label fw-semibold">Tên đăng nhập <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="username" name="username" placeholder="nguyenvana" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label fw-semibold">Địa chỉ Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="vana@example.com" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="password" class="form-label fw-semibold">Mật khẩu <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="password" name="password" placeholder="Tối thiểu 6 ký tự" minlength="6" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="confirm_password" class="form-label fw-semibold">Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Nhập lại mật khẩu" minlength="6" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Giới tính</label>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="gender" id="genderNam" value="Nam" checked>
+                                        <label class="form-check-label" for="genderNam">Nam</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="gender" id="genderNu" value="Nữ">
+                                        <label class="form-check-label" for="genderNu">Nữ</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="gender" id="genderKhac" value="Khác">
+                                        <label class="form-check-label" for="genderKhac">Khác</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="level_id" class="form-label fw-semibold">Trình độ hiện tại (Level) <span class="text-danger">*</span></label>
+                                <select class="form-select" id="level_id" name="level_id" required>
+                                    {% for lvl in levels %}
+                                        <option value="{{ lvl.id }}" {% if lvl.rank_order == 1 %}selected{% endif %}>
+                                            {{ lvl.name }} (Độ khó: {{ lvl.rank_order }}/5)
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text small">Thuật toán sẽ tự động chọn câu hỏi phù hợp nhất với Level này.</div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid mt-4 mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg fw-semibold">
+                                <i class="bi bi-check2-circle me-2"></i> Hoàn tất Đăng ký
+                            </button>
+                        </div>
+
+                        <div class="text-center">
+                            <span class="text-secondary small">Đã có tài khoản?</span>
+                            <a href="{{ url_for('auth.login') }}" class="small fw-semibold text-decoration-none ms-1">Đăng nhập</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

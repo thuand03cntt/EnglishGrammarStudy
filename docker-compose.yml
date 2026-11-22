@@ -1,0 +1,68 @@
+# ========================================================
+# EnglishPractice - Docker Compose Configuration
+# Services: web (Flask App), db (MariaDB 10.11+)
+# ========================================================
+version: "3.8"
+
+services:
+  db:
+    image: mariadb:10.11
+    container_name: english_practice_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_secure_password_2026
+      MYSQL_DATABASE: english_practice_db
+      MYSQL_USER: practice_user
+      MYSQL_PASSWORD: practice_password123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      # Auto-executes SQL dump on first container volume initialization
+      - ./database/init_dump.sql:/docker-entrypoint-initdb.d/init_dump.sql:ro
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "practice_user", "-ppractice_password123"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - practice_network
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: english_practice_web
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_ENV: production
+      PORT: 5000
+      SECRET_KEY: english-practice-prod-secret-key-39f8a84b02e7182d
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: practice_user
+      DB_PASSWORD: practice_password123
+      DB_NAME: english_practice_db
+      USE_SQLITE: "false"
+      MAIL_SUPPRESS_SEND: "true"
+      MAIL_DEFAULT_SENDER: noreply@englishpractice.local
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - avatar_uploads:/app/static/uploads/avatars
+    networks:
+      - practice_network
+
+volumes:
+  mariadb_data:
+    driver: local
+  avatar_uploads:
+    driver: local
+
+networks:
+  practice_network:
+    driver: bridge
